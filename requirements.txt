@@ -1,0 +1,9 @@
+flask
+psycopg2-binary
+matplotlib
+tabulate
+groq
+pandas
+sqlalchemy
+openpyxl
+python-dotenv

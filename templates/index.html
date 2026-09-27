@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QueryNative</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #212121;
+      --surface: #282828;
+      --surface2: #323232;
+      --surface3: #3A3A3A;
+      --border: #383838;
+      --border2: #444444;
+      --text: #F2F2F2;
+      --muted: #6d6a6a;
+      --faint: #777777;
+      --sage: #769382;
+      --sage-dark: #48a778;
+      --sage-dim: rgba(216, 219, 217, 0.12);
+      --sage-border: rgba(248, 248, 248, 0.3);
+      --red: #C0392B;
+      --red-dim: rgba(192, 57, 43, .12);
+      --red-border: rgba(192, 57, 43, .25);
+      --font: 'Raleway', sans-serif;
+      --serif: 'Lora', serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 265px 1fr;
+      height: 100vh;
+      overflow: hidden
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .sidebar-header {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 11px
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--sage-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .logo-name {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .02em
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--faint);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-top: 2px;
+      font-weight: 500
+    }
+
+    .sidebar-label {
+      padding: 16px 18px 6px;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--faint);
+      flex-shrink: 0
+    }
+
+    .suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 4px 10px 10px;
+      overflow-y: auto;
+      max-height: 220px
+    }
+
+    .suggestion-btn {
+      text-align: left;
+      background: none;
+      border: 1px solid transparent;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-weight: 500;
+      transition: all .15s;
+      line-height: 1.4
+    }
+
+    .suggestion-btn:hover {
+      background: var(--sage-dim);
+      color: var(--sage);
+      border-color: var(--sage-border)
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 18px;
+      flex-shrink: 0
+    }
+
+    .history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 10px 10px
+    }
+
+    .history-item {
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 11.5px;
+      color: var(--faint);
+      border: 1px solid transparent;
+      transition: all .15s;
+      margin-bottom: 2px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .history-item:hover {
+      background: var(--surface2);
+      color: var(--muted);
+      border-color: var(--border2)
+    }
+
+    .history-empty {
+      font-size: 12px;
+      color: var(--faint);
+      padding: 8px 10px;
+      font-style: italic
+    }
+
+    .sidebar-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .clear-btn {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: none;
+      font-size: 12px;
+      color: var(--faint);
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      transition: all .15s;
+      letter-spacing: .03em
+    }
+
+    .clear-btn:hover {
+      background: var(--red-dim);
+      color: var(--red);
+      border-color: var(--red-border)
+    }
+
+    /* MAIN */
+    .main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg)
+    }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 13px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0
+    }
+
+    .topbar-title {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: .02em
+    }
+
+    .db-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--sage-dim);
+      color: var(--sage);
+      border: 1px solid var(--sage-border);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 600
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--sage);
+      border-radius: 50%;
+      animation: pulse 2.5s infinite;
+      flex-shrink: 0
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .25
+      }
+    }
+
+    .schema-btn {
+      font-size: 11.5px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      transition: all .15s
+    }
+
+    .schema-btn:hover {
+      border-color: var(--sage-border);
+      color: var(--sage)
+    }
+
+    /* CHAT */
+    .chat-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px
+    }
+
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      text-align: center;
+      padding: 48px 32px;
+      gap: 14px
+    }
+
+    .welcome-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px
+    }
+
+    .welcome h2 {
+      font-family: var(--serif);
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--text)
+    }
+
+    .welcome p {
+      font-size: 13.5px;
+      color: var(--muted);
+      max-width: 420px;
+      line-height: 1.75
+    }
+
+    .welcome-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 6px
+    }
+
+    .welcome-chip {
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: var(--font);
+      font-weight: 500
+    }
+
+    .welcome-chip:hover {
+      background: var(--sage-dim);
+      color: var(--sage);
+      border-color: var(--sage-border)
+    }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: fadeUp .2s ease
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* User message */
+    .msg-user-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px
+    }
+
+    .msg-user {
+      background: var(--sage-dark);
+      color: #E8F4EE;
+      padding: 11px 18px;
+      border-radius: 16px 16px 4px 16px;
+      font-size: 13.5px;
+      max-width: 65%;
+      line-height: 1.55;
+      font-weight: 500
+    }
+
+    .followup-badge {
+      font-size: 10px;
+      color: var(--sage);
+      background: var(--sage-dim);
+      border: 1px solid var(--sage-border);
+      border-radius: 10px;
+      padding: 2px 9px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      margin-right: 4px
+    }
+
+    .resolved-hint {
+      font-size: 11px;
+      color: var(--faint);
+      font-style: italic;
+      margin-right: 4px
+    }
+
+    /* RESULT CARD */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 18px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .result-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase
+    }
+
+    .result-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--sage-dim);
+      color: var(--sage);
+      border: 1px solid var(--sage-border)
+    }
+
+    .chart-type-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(107, 148, 128, .08);
+      color: #8BB0A0;
+      border: 1px solid rgba(107, 148, 128, .15);
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px
+    }
+
+    .action-btn {
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: none;
+      color: var(--faint);
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap
+    }
+
+    .action-btn:hover {
+      background: var(--sage-dim);
+      color: var(--sage);
+      border-color: var(--sage-border)
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 6px
+    }
+
+    .tab-btn {
+      padding: 10px 15px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--faint);
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+      margin-bottom: -1px;
+      letter-spacing: .04em
+    }
+
+    .tab-btn:hover {
+      color: var(--muted)
+    }
+
+    .tab-btn.active {
+      color: var(--sage);
+      border-bottom-color: var(--sage)
+    }
+
+    .tab-panel {
+      display: none
+    }
+
+    .tab-panel.active {
+      display: block
+    }
+
+    /* SQL */
+    .sql-block {
+      padding: 18px 20px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: #AAAAAA;
+      background: var(--bg);
+      line-height: 1.85;
+      white-space: pre-wrap;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .sql-kw {
+      color: var(--sage);
+      font-weight: 600
+    }
+
+    .sql-fn {
+      color: #A8C5B5;
+      font-weight: 500
+    }
+
+    .sql-num {
+      color: #C8A87A
+    }
+
+    .sql-str {
+      color: #8FB4A0
+    }
+
+    .sql-actions {
+      padding: 10px 18px;
+      display: flex;
+      gap: 8px
+    }
+
+    .copy-btn {
+      font-size: 11.5px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: var(--sage-dim);
+      color: var(--sage);
+      border: 1px solid var(--sage-border);
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      transition: all .15s
+    }
+
+    .copy-btn:hover {
+      background: rgba(107, 148, 128, .2)
+    }
+
+    /* STEPS */
+    .steps-grid {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 0
+    }
+
+    .step-item {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 16px;
+      position: relative
+    }
+
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 24px;
+      bottom: 0;
+      width: 1px;
+      background: var(--border2)
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 1px;
+      background: var(--sage-dark);
+      color: #E8F4EE;
+      font-size: 10.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .step-content {
+      flex: 1;
+      padding-top: 2px
+    }
+
+    .step-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px
+    }
+
+    .step-detail {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      line-height: 1.7;
+      background: var(--bg);
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border)
+    }
+
+    .step-tag {
+      display: inline-block;
+      background: var(--sage-dim);
+      color: var(--sage);
+      border: 1px solid var(--sage-border);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 10.5px;
+      font-weight: 600;
+      margin: 2px 2px 0 0
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+      max-height: 340px;
+      overflow-y: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px
+    }
+
+    thead th {
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--faint);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      white-space: nowrap
+    }
+
+    tbody td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none
+    }
+
+    tbody tr:hover td {
+      background: var(--surface2)
+    }
+
+    .num-cell {
+      font-family: var(--mono);
+      text-align: center;
+      color: var(--sage);
+      font-weight: 500
+    }
+
+    /* CHART */
+    .chart-wrap {
+      padding: 20px;
+      text-align: center
+    }
+
+    .chart-wrap img {
+      max-width: 100%;
+      border-radius: 8px
+    }
+
+    .chart-actions {
+      padding: 0 20px 16px;
+      display: flex;
+      gap: 8px
+    }
+
+    .no-chart {
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--faint);
+      line-height: 1.7
+    }
+
+    /* INVALID / ERROR */
+    .invalid-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start
+    }
+
+    .invalid-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .invalid-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px
+    }
+
+    .invalid-text {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65
+    }
+
+    .invalid-hint {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--faint);
+      font-family: var(--mono);
+      line-height: 1.7
+    }
+
+    .error-card {
+      background: var(--surface);
+      border: 1px solid var(--red-border);
+      border-radius: 12px;
+      padding: 16px 20px
+    }
+
+    .error-text {
+      font-size: 13px;
+      color: var(--red);
+      line-height: 1.6;
+      font-weight: 500
+    }
+
+    .error-text strong {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 700
+    }
+
+    /* THINKING */
+    .thinking {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px
+    }
+
+    .thinking-dots {
+      display: flex;
+      gap: 5px
+    }
+
+    .thinking-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--sage);
+      animation: boing .9s infinite
+    }
+
+    .thinking-dots span:nth-child(2) {
+      animation-delay: .16s
+    }
+
+    .thinking-dots span:nth-child(3) {
+      animation-delay: .32s
+    }
+
+    @keyframes boing {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(.5);
+        opacity: .3
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .thinking-text {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600
+    }
+
+    /* INPUT AREA */
+    .input-area {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 15px 28px 18px;
+      flex-shrink: 0;
+      position: relative
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 10px 10px 10px 18px;
+      transition: all .2s
+    }
+
+    .input-wrap:focus-within {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(107, 148, 128, .1)
+    }
+
+    .query-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: var(--font);
+      font-size: 13.5px;
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.5;
+      max-height: 120px;
+      min-height: 22px
+    }
+
+    .query-input::placeholder {
+      color: var(--faint)
+    }
+
+    .send-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      border: none;
+      background: var(--sage-dark);
+      color: white;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s
+    }
+
+    .send-btn:hover {
+      background: var(--sage);
+      transform: translateY(-1px)
+    }
+
+    .send-btn:active {
+      transform: scale(.95)
+    }
+
+    .send-btn:disabled {
+      background: var(--border2);
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--faint);
+      margin-top: 8px;
+      padding: 0 4px
+    }
+
+    kbd {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 1px 5px;
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      color: var(--faint)
+    }
+
+    /* AUTOCOMPLETE DROPDOWN */
+    .autocomplete-dropdown {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 28px;
+      right: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 100;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, .4);
+    }
+
+    .autocomplete-dropdown.open {
+      display: block
+    }
+
+    .ac-item {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font);
+      font-weight: 500;
+      transition: all .1s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ac-item:last-child {
+      border-bottom: none
+    }
+
+    .ac-item:hover,
+    .ac-item.active {
+      background: var(--sage-dim);
+      color: var(--sage)
+    }
+
+    .ac-item mark {
+      background: none;
+      color: var(--sage);
+      font-weight: 700
+    }
+
+    .ac-icon {
+      color: var(--faint);
+      flex-shrink: 0
+    }
+
+    /* CONTEXT INDICATOR */
+    .context-bar {
+      display: none;
+      background: var(--sage-dim);
+      border: 1px solid var(--sage-border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--sage);
+      font-weight: 500;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .context-bar.visible {
+      display: flex
+    }
+
+    .context-bar span {
+      color: var(--muted);
+      font-style: italic;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1
+    }
+
+    .context-bar-dismiss {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--faint);
+      font-size: 14px;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0
+    }
+
+    .context-bar-dismiss:hover {
+      color: var(--red)
+    }
+
+    /* FOLLOWUP TOGGLE */
+    .followup-toggle {
+      display: none;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: none;
+      font-size: 11.5px;
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--faint);
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .followup-toggle.visible {
+      display: flex
+    }
+
+    .followup-toggle.active {
+      background: var(--sage-dim);
+      color: var(--sage);
+      border-color: var(--sage-border)
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 4px
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--sage-dark)
+    }
+
+    /* CONNECTION SCREEN */
+    .conn-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .conn-overlay.hidden {
+      display: none
+    }
+
+    .conn-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 44px;
+      width: 420px;
+      max-width: 95vw
+    }
+
+    .conn-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px
+    }
+
+    .conn-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--sage-dim);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .conn-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: var(--serif)
+    }
+
+    .conn-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .conn-field {
+      margin-bottom: 14px
+    }
+
+    .conn-field label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .conn-field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 13.5px;
+      font-family: var(--font);
+      box-sizing: border-box;
+      outline: none;
+      transition: border .15s
+    }
+
+    .conn-field input:focus {
+      border-color: var(--sage)
+    }
+
+    .conn-row {
+      display: grid;
+      grid-template-columns: 1fr 100px;
+      gap: 10px
+    }
+
+    .conn-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--sage);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background .15s
+    }
+
+    .conn-btn:hover {
+      background: var(--sage-dark)
+    }
+
+    .conn-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .conn-error {
+      color: #e07070;
+      font-size: 12px;
+      margin-top: 10px;
+      display: none
+    }
+
+    .conn-error.visible {
+      display: block
+    }
+
+    .conn-status {
+      font-size: 12px;
+      color: var(--sage);
+      margin-top: 10px;
+      display: none
+    }
+
+    .conn-status.visible {
+      display: block
+    }
+
+    /* DB INDICATOR in sidebar */
+    .db-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border)
+    }
+
+    .db-indicator:hover {
+      border-color: var(--sage)
+    }
+
+    .db-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--sage);
+      flex-shrink: 0
+    }
+
+    .db-name {
+      color: var(--text);
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1
+    }
+
+    .db-change {
+      color: var(--faint);
+      font-size: 11px;
+      flex-shrink: 0
+    }
+
+    /* AI BADGE */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: rgba(107, 148, 128, .15);
+      border: 1px solid var(--sage-border);
+      font-size: 10.5px;
+      color: var(--sage);
+      font-weight: 600;
+      margin-left: 6px
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px)
+    }
+
+    .modal-overlay.open {
+      display: flex
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border-radius: 16px;
+      max-width: 640px;
+      width: 92%;
+      max-height: 82vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+      border: 1px solid var(--border2);
+      animation: popIn .18s ease
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(.96)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg);
+      flex-shrink: 0
+    }
+
+    .modal-title {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text)
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border2);
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s
+    }
+
+    .modal-close:hover {
+      background: var(--red-dim);
+      color: var(--red);
+      border-color: var(--red-border)
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      padding: 20px 24px;
+      flex: 1
+    }
+
+    /* ── DUAL-ENGINE: SOURCE TOGGLE + UPLOAD PANEL ─────────────── */
+    .conn-card.wide {
+      width: 540px
+    }
+
+    .source-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 4px 0 22px;
+    }
+
+    .source-toggle button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 12px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .01em;
+      transition: all .18s ease;
+    }
+
+    .source-toggle button:hover {
+      color: var(--text);
+      border-color: var(--border2);
+    }
+
+    .source-toggle button.active {
+      background: rgba(118, 147, 130, .08);
+      color: var(--text);
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(118, 147, 130, .08);
+    }
+
+    .source-toggle svg {
+      stroke: currentColor
+    }
+
+    /* upload sub-tabs */
+    .upload-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 18px;
+    }
+
+    .upload-tab {
+      padding: 9px 15px;
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .upload-tab:hover {
+      color: var(--text)
+    }
+
+    .upload-tab.active {
+      background: var(--sage);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+    }
+
+    .upload-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 8px;
+    }
+
+    .dropzone {
+      border: 1.5px dashed var(--border2);
+      border-radius: 12px;
+      padding: 36px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .18s ease;
+      background: rgba(255, 255, 255, .012);
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .dropzone:hover,
+    .dropzone.drag {
+      border-color: var(--sage);
+      background: rgba(118, 147, 130, .06);
+      color: var(--text);
+    }
+
+    .dropzone svg {
+      stroke: var(--muted);
+      margin-bottom: 10px;
+      transition: stroke .15s;
+    }
+
+    .dropzone:hover svg,
+    .dropzone.drag svg {
+      stroke: var(--sage)
+    }
+
+    .dropzone .dz-name {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+
+    .dropzone .dz-meta {
+      font-size: 12px;
+      color: var(--faint);
+    }
+
+    .dropzone .dz-hint {
+      font-size: 12.5px;
+      margin-top: 4px;
+      color: var(--faint);
+    }
+
+    .upload-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--faint);
+      margin: 14px 2px 6px;
+      line-height: 1.55;
+    }
+
+    .upload-info svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      stroke: var(--faint)
+    }
+
+    .upload-status {
+      margin-top: 12px;
+      padding: 11px 14px;
+      border-radius: 9px;
+      background: rgba(118, 147, 130, .10);
+      border: 1px solid var(--sage-border);
+      color: var(--sage);
+      font-size: 12.5px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .upload-status.visible {
+      display: block
+    }
+
+    .upload-status.error {
+      background: var(--red-dim);
+      border-color: var(--red-border);
+      color: #e07070;
+    }
+
+    .upload-spinner {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      margin-right: 6px;
+      border: 2px solid rgba(118, 147, 130, .25);
+      border-top-color: var(--sage);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: -2px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .tables-card {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      overflow: hidden;
+      display: none;
+    }
+
+    .tables-card.visible {
+      display: block
+    }
+
+    .tables-card-head {
+      padding: 10px 14px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--faint);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .tables-card-body {
+      padding: 6px 14px 10px
+    }
+
+    .tables-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      border-bottom: 1px dashed transparent;
+    }
+
+    .tables-card-row+.tables-card-row {
+      border-top: 1px dashed var(--border)
+    }
+
+    .tables-card-name {
+      color: var(--sage);
+      font-weight: 500
+    }
+
+    .tables-card-count {
+      color: var(--muted)
+    }
+
+    .activate-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      background: var(--sage);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .01em;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .15s;
+    }
+
+    .activate-btn.visible {
+      display: flex
+    }
+
+    .activate-btn:hover {
+      background: var(--sage-dark)
+    }
+
+    .activate-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .reset-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      font-family: var(--font);
+      font-weight: 500;
+      font-size: 12.5px;
+      cursor: pointer;
+      display: none;
+      transition: all .15s;
+    }
+
+    .reset-btn.visible {
+      display: block
+    }
+
+    .reset-btn:hover {
+      color: var(--text);
+      border-color: var(--border2)
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- CONNECTION SCREEN -->
+  <div class="conn-overlay" id="conn-overlay">
+    <div class="conn-card wide">
+      <div class="conn-logo">
+        <div class="conn-logo-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#769382" stroke-width="2">
+            <ellipse cx="12" cy="8" rx="8" ry="3" />
+            <path d="M4 8v5c0 1.66 3.58 3 8 3s8-1.34 8-3V8" />
+            <path d="M4 13v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5" />
+          </svg>
+        </div>
+        <div>
+          <div class="conn-title">QueryNative</div>
+          <div class="conn-sub" id="conn-sub-text">Connect your PostgreSQL database</div>
+        </div>
+      </div>
+
+      <!-- SOURCE TOGGLE -->
+      <div class="source-toggle" data-testid="source-toggle">
+        <button id="src-db" class="active" onclick="setSourceMode('db')" data-testid="src-db-btn">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="6" rx="8" ry="3" />
+            <path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6" />
+            <path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+          </svg>
+          Connect to Database
+        </button>
+        <button id="src-up" onclick="setSourceMode('upload')" data-testid="src-upload-btn">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Upload Data
+        </button>
+      </div>
+
+      <!-- DATABASE PANEL -->
+      <div id="pg-panel">
+        <div class="conn-row">
+          <div class="conn-field">
+            <label>Host</label>
+            <input type="text" id="conn-host" value="127.0.0.1" placeholder="127.0.0.1" data-testid="conn-host-input">
+          </div>
+          <div class="conn-field">
+            <label>Port</label>
+            <input type="text" id="conn-port" value="5432" placeholder="5432" data-testid="conn-port-input">
+          </div>
+        </div>
+        <div class="conn-field">
+          <label>Database Name</label>
+          <input type="text" id="conn-dbname" placeholder="e.g. northwind, mydb" data-testid="conn-dbname-input">
+        </div>
+        <div class="conn-field">
+          <label>Username</label>
+          <input type="text" id="conn-user" placeholder="e.g. postgres" data-testid="conn-user-input">
+        </div>
+        <div class="conn-field">
+          <label>Password</label>
+          <input type="password" id="conn-password" placeholder="your password" data-testid="conn-password-input">
+        </div>
+
+        <div class="conn-error" id="conn-error"></div>
+        <div class="conn-status" id="conn-status"></div>
+        <button class="conn-btn" id="conn-btn" onclick="connectDB()" data-testid="conn-submit-btn">Connect</button>
+      </div>
+
+      <!-- UPLOAD PANEL -->
+      <div id="upload-panel" style="display:none">
+        <div class="upload-tabs" data-testid="upload-tabs">
+          <!-- <button class="upload-tab" data-kind="sql" onclick="setUploadKind('sql')" data-testid="upload-tab-sql">SQL -->
+            <!-- File</button> -->
+          <button class="upload-tab active" data-kind="csv" onclick="setUploadKind('csv')"
+            data-testid="upload-tab-csv">CSV / Excel</button>
+          <button class="upload-tab" data-kind="sqlite" onclick="setUploadKind('sqlite')"
+            data-testid="upload-tab-sqlite">SQLite File</button>
+        </div>
+
+        <div class="upload-section-label" id="upload-label">CSV or Excel File</div>
+
+        <div class="dropzone" id="dropzone" data-testid="upload-dropzone"
+          onclick="document.getElementById('upload-input').click()">
+          <svg id="dz-icon" width="44" height="44" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="1.4">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <div class="dz-name" id="dz-name">Drop your file here</div>
+          <div class="dz-meta" id="dz-meta">or click to browse</div>
+          <div class="dz-hint" id="dz-hint" style="display:none"></div>
+        </div>
+        <input type="file" id="upload-input" style="display:none" onchange="handleFileChosen(this)"
+          data-testid="upload-file-input" />
+
+        <div class="upload-info" id="upload-info">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2">
+            <path d="M12 9v4m0 4h.01" />
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          </svg>
+          <span id="upload-info-text">Headers, types and primary/foreign keys are inferred automatically.</span>
+        </div>
+
+        <div class="upload-status" id="upload-status" data-testid="upload-status"></div>
+
+        <div class="tables-card" id="tables-card" data-testid="tables-preview">
+          <div class="tables-card-head">Tables Created</div>
+          <div class="tables-card-body" id="tables-card-body"></div>
+        </div>
+
+        <button class="activate-btn" id="activate-btn" onclick="activateUpload()" data-testid="activate-schema-btn">
+          ✓ Use This Schema
+        </button>
+        <button class="reset-btn" id="reset-btn" onclick="resetUpload()" data-testid="upload-reset-btn">
+          Upload another file
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-row">
+          <div class="logo-icon">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#A8C5B5" stroke-width="2">
+              <ellipse cx="12" cy="8" rx="8" ry="3" />
+              <path d="M4 8v5c0 1.66 3.58 3 8 3s8-1.34 8-3V8" />
+              <path d="M4 13v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5" />
+            </svg>
+          </div>
+          <div>
+            <div class="logo-name">QueryNative</div>
+            <div class="logo-sub">Natural Language → SQL</div>
+          </div>
+        </div>
+      </div>
+      <div class="db-indicator" id="db-indicator" onclick="showConnectScreen()" title="Click to change database">
+        <div class="db-dot"></div>
+        <div class="db-name" id="db-name-label">Not connected</div>
+        <div class="db-change">change</div>
+      </div>
+
+      <div class="sidebar-label">Query Types</div>
+      <div style="font-size:11px;color:var(--faint);padding:0 12px 4px;font-style:italic">Based on connected database
+      </div>
+      <div class="suggestions" id="suggestions-list">
+        <div class="history-empty">Connect a database to see query types</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sidebar-label">Recent History</div>
+      <div class="history" id="history-list">
+        <div class="history-empty">No queries yet</div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">Ask your database</div>
+        <div class="db-badge" id="db-badge-top"><span class="dot"></span><span id="db-badge-label">Not connected</span>
+        </div>
+        <button class="schema-btn" onclick="openSchema()">View Schema</button>
+      </div>
+
+      <div class="chat-wrap" id="chat">
+        <div class="welcome" id="welcome-msg">
+          <div class="welcome-icon">
+            <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="#6B9480" stroke-width="1.6">
+              <ellipse cx="12" cy="8" rx="8" ry="3" />
+              <path d="M4 8v5c0 1.66 3.58 3 8 3s8-1.34 8-3V8" />
+              <path d="M4 13v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5" />
+            </svg>
+          </div>
+          <h2>Ask your database anything</h2>
+          <p>Type a question in plain English. QueryNative converts it to SQL, runs it, and visualizes the results. Ask
+            follow-up questions to refine results.</p>
+          <div class="welcome-chips">
+            <button class="welcome-chip" onclick="ask('How many records?')">How many records?</button>
+            <button class="welcome-chip" onclick="ask('Count by category')">Count by category</button>
+            <button class="welcome-chip" onclick="ask('Average value by group')">Average by group</button>
+            <button class="welcome-chip" onclick="ask('Top 5 by value')">Top 5 by value</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INPUT -->
+      <div class="input-area" id="input-area">
+
+        <!-- Context bar — shows last query when follow-up detected -->
+        <div class="context-bar" id="context-bar">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Following up on: <span id="context-text"></span>
+          <button class="context-bar-dismiss" onclick="dismissFollowup()" title="Cancel follow-up">✕</button>
+        </div>
+
+        <!-- Autocomplete dropdown (shown above input) -->
+        <div class="autocomplete-dropdown" id="ac-dropdown"></div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px" id="input-toolbar">
+          <button class="followup-toggle" id="followup-toggle" onclick="toggleFollowup()">
+            <!-- <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg> -->
+            <!-- <span id="followup-label">Follow-up mode</span> -->
+          </button>
+        </div>
+        <div class="input-wrap">
+          <textarea id="query-input" class="query-input" rows="1"
+            placeholder="e.g. How many employees? or Count by department..." onkeydown="handleKey(event)"
+            oninput="handleInput(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="submitQuery()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+        <div class="input-hint"><kbd>Enter</kbd> to run &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> new line &nbsp;·&nbsp;
+          <kbd>↑↓</kbd> navigate suggestions &nbsp;·&nbsp; <kbd>Esc</kbd> close
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="schema-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="schema-title">Database Schema</div>
+        <button class="modal-close" onclick="closeSchema()">×</button>
+      </div>
+      <div class="modal-body" id="schema-content">
+        <div style="color:var(--faint);font-size:13px">Loading schema...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('query-input');
+    const sendBtn = document.getElementById('send-btn');
+    const acDrop = document.getElementById('ac-dropdown');
+    const ctxBar = document.getElementById('context-bar');
+    const ctxText = document.getElementById('context-text');
+
+    let isLoading = false;
+    let msgCount = 0;
+    const resultStore = {};
+    let acItems = [];
+    let acIndex = -1;
+    let acTimeout = null;
+    let lastQuestion = '';
+    let forceFollowup = false;  // manual followup toggle
+
+    const CHART_TYPE_LABELS = {
+      bar: 'Bar Chart', horizontal_bar: 'Horizontal Bar',
+      line: 'Line Chart', pie: 'Pie Chart', scatter: 'Scatter Plot'
+    };
+
+    function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+    function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px' }
+    function scrollBottom() { chat.scrollTop = chat.scrollHeight }
+    function ask(q) { input.value = q; autoResize(input); closeAC(); submitQuery() }
+    function hideWelcome() { const w = document.getElementById('welcome-msg'); if (w) w.remove() }
+    function isNumeric(v) { return v !== null && v !== '' && !isNaN(parseFloat(v)) && isFinite(v) }
+    function fmtNum(v) {
+      if (isNumeric(v)) { const n = parseFloat(v); return n % 1 !== 0 ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toLocaleString() }
+      return v;
+    }
+
+    // ── AUTOCOMPLETE ──────────────────────────────
+    function handleInput(el) {
+      autoResize(el);
+      updateContextBar();
+      clearTimeout(acTimeout);
+      const q = el.value.trim();
+      if (q.length < 2) { closeAC(); return; }
+      acTimeout = setTimeout(() => fetchAC(q), 150);
+    }
+
+    function fetchAC(q) {
+      fetch('/api/autocomplete?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+          acItems = data.suggestions || [];
+          acIndex = -1;
+          renderAC(q);
+        }).catch(() => { });
+    }
+
+    function highlightMatch(text, q) {
+      const idx = text.toLowerCase().indexOf(q.toLowerCase());
+      if (idx < 0) return escHtml(text);
+      return escHtml(text.slice(0, idx))
+        + '<mark>' + escHtml(text.slice(idx, idx + q.length)) + '</mark>'
+        + escHtml(text.slice(idx + q.length));
+    }
+
+    function renderAC(q) {
+      if (acItems.length === 0) { closeAC(); return; }
+      acDrop.innerHTML = acItems.map((s, i) => `
+    <div class="ac-item" data-idx="${i}" onmousedown="pickAC(${i})">
+      <svg class="ac-icon" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      ${highlightMatch(s, q)}
+    </div>`).join('');
+      acDrop.classList.add('open');
+    }
+
+    function closeAC() { acDrop.classList.remove('open'); acDrop.innerHTML = ''; acItems = []; acIndex = -1; }
+
+    function pickAC(i) {
+      input.value = acItems[i];
+      autoResize(input);
+      closeAC();
+      input.focus();
+    }
+
+    function handleKey(e) {
+      if (acDrop.classList.contains('open')) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          acIndex = Math.min(acIndex + 1, acItems.length - 1);
+          highlightAC();
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          acIndex = Math.max(acIndex - 1, -1);
+          highlightAC();
+          return;
+        }
+        if (e.key === 'Tab' || e.key === 'Enter' && acIndex >= 0) {
+          e.preventDefault();
+          if (acIndex >= 0) pickAC(acIndex);
+          if (e.key === 'Enter' && acIndex < 0) submitQuery();
+          return;
+        }
+        if (e.key === 'Escape') { closeAC(); return; }
+      }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitQuery(); }
+    }
+
+    function highlightAC() {
+      acDrop.querySelectorAll('.ac-item').forEach((el, i) => {
+        el.classList.toggle('active', i === acIndex);
+      });
+    }
+
+    // Close autocomplete on outside click
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#input-area')) closeAC();
+    });
+
+    // ── FOLLOW-UP TOGGLE ─────────────────────────
+    // function toggleFollowup() {
+    //   forceFollowup = !forceFollowup;
+    //   const btn = document.getElementById('followup-toggle');
+    //   const lbl = document.getElementById('followup-label');
+    //   if (forceFollowup) {
+    //     btn.classList.add('active');
+    //     lbl.textContent = 'Follow-up: ON';
+    //     if (lastQuestion) {
+    //       ctxText.textContent = lastQuestion.length > 50 ? lastQuestion.substring(0, 50) + '…' : lastQuestion;
+    //       ctxBar.classList.add('visible');
+    //     }
+    //   } else {
+    //     btn.classList.remove('active');
+    //     lbl.textContent = 'Follow-up mode';
+    //     ctxBar.classList.remove('visible');
+    //   }
+    // }
+
+    function dismissFollowup() {
+      forceFollowup = false;
+      const btn = document.getElementById('followup-toggle');
+      const lbl = document.getElementById('followup-label');
+      btn.classList.remove('active');
+      lbl.textContent = 'Follow-up mode';
+      ctxBar.classList.remove('visible');
+    }
+
+    // ── CONTEXT BAR ──────────────────────────────
+    function updateContextBar() {
+      // Only auto-show context bar when forceFollowup is on
+      if (forceFollowup && lastQuestion) {
+        ctxText.textContent = lastQuestion.length > 50 ? lastQuestion.substring(0, 50) + '…' : lastQuestion;
+        ctxBar.classList.add('visible');
+      }
+    }
+
+    function showFollowupToggle() {
+      if (lastQuestion) {
+        document.getElementById('followup-toggle').classList.add('visible');
+      }
+    }
+
+    // ── SUGGESTIONS SIDEBAR ───────────────────────
+    function loadSuggestions() {
+      fetch('/api/suggestions').then(r => r.json()).then(data => {
+        const list = document.getElementById('suggestions-list');
+        list.innerHTML = '';
+        if (!data.suggestions || data.suggestions.length === 0) {
+          list.innerHTML = '<div class="history-empty">No query types available</div>';
+          return;
+        }
+        (data.suggestions || []).forEach(s => {
+          const parts = s.split(' — ');
+          const tag = parts[0] || s;
+          const desc = parts[1] || '';
+          const div = document.createElement('div');
+          div.className = 'suggestion-btn';
+          div.style.cssText = 'cursor:default;pointer-events:none';
+          div.innerHTML = desc
+            ? `<span style="color:var(--sage);font-weight:700;font-size:11px">${escHtml(tag)}</span><br><span style="color:var(--faint);font-size:11px;font-style:italic">${escHtml(desc)}</span>`
+            : `<span style="color:var(--muted);font-size:12px">${escHtml(s)}</span>`;
+          list.appendChild(div);
+        });
+      }).catch(() => { });
+    }
+    loadSuggestions();
+
+    // ── SQL HIGHLIGHT ─────────────────────────────
+    function highlightSQL(sql) {
+      if (!sql) return '';
+      let out = sql.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      ['SUM', 'COUNT', 'AVG', 'MAX', 'MIN', 'ROUND', 'COALESCE', 'CAST', 'EXTRACT', 'DISTINCT'].forEach(f => {
+        out = out.replace(new RegExp('\\b' + f + '\\b', 'g'), `<span class="sql-fn">${f}</span>`);
+      });
+      ['SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'ON', 'GROUP BY', 'ORDER BY',
+        'HAVING', 'LIMIT', 'AS', 'AND', 'OR', 'NOT', 'IN', 'IS', 'NULL', 'BY', 'GROUP', 'ORDER', 'DESC', 'ASC',
+        'BETWEEN', 'LIKE', 'ILIKE'].forEach(k => {
+          out = out.replace(new RegExp('\\b' + k + '\\b', 'g'), `<span class="sql-kw">${k}</span>`);
+        });
+      out = out.replace(/'([^']*)'/g, `<span class="sql-str">'$1'</span>`);
+      out = out.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="sql-num">$1</span>');
+      return out;
+    }
+
+    function copySQL(id) {
+      const btn = document.getElementById('cbtn-' + id);
+      const sql = document.getElementById('sqltext-' + id).innerText;
+      navigator.clipboard.writeText(sql).then(() => { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy SQL', 1800); });
+    }
+
+    function switchTab(cardId, tabName) {
+      const card = document.getElementById('card-' + cardId);
+      card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      card.querySelector('.tab-btn[data-tab="' + tabName + '"]').classList.add('active');
+      card.querySelector('.tab-panel[data-tab="' + tabName + '"]').classList.add('active');
+    }
+
+    function downloadCSV(id) {
+      const store = resultStore[id]; if (!store) return;
+      const { question, columns, rows } = store;
+      fetch('/api/export/csv', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ columns, rows, question })
+      }).then(r => r.blob()).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = question.toLowerCase().replace(/\s+/g, '_').substring(0, 40) + '.csv';
+        a.click(); URL.revokeObjectURL(url);
+      });
+    }
+
+    function downloadChart(id) {
+      const img = document.getElementById('chart-img-' + id); if (!img) return;
+      const a = document.createElement('a');
+      a.href = img.src;
+      const q = (resultStore[id] && resultStore[id].question || 'chart').toLowerCase().replace(/\s+/g, '_').substring(0, 40);
+      a.download = q + '.png'; a.click();
+    }
+
+    // ── THINKING / MESSAGES ───────────────────────
+    function addThinking() {
+      hideWelcome();
+      const div = document.createElement('div'); div.className = 'msg'; div.id = 'thinking';
+      div.innerHTML = `<div class="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div><div class="thinking-text">Processing query...</div></div>`;
+      chat.appendChild(div); scrollBottom();
+    }
+    function removeThinking() { const el = document.getElementById('thinking'); if (el) el.remove() }
+
+    function addUserMsg(text, isFollowup, resolved) {
+      hideWelcome();
+      const div = document.createElement('div'); div.className = 'msg';
+      const followupHtml = isFollowup
+        ? `<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:3px">
+         <span class="resolved-hint">interpreted as: "${escHtml(resolved)}"</span>
+         <span class="followup-badge">Follow-up</span>
+       </div>`
+        : '';
+      div.innerHTML = `<div class="msg-user-wrap">${followupHtml}<div class="msg-user">${escHtml(text)}</div></div>`;
+      chat.appendChild(div); scrollBottom();
+    }
+
+    function buildTable(columns, rows) {
+      if (!columns || !rows || rows.length === 0)
+        return '<div style="padding:32px;text-align:center;color:var(--faint);font-size:13px">No results returned</div>';
+      const heads = columns.map(c => `<th>${escHtml(c.replace(/_/g, ' ').toUpperCase())}</th>`).join('');
+      const body = rows.map(row => {
+        const cells = row.map(cell => {
+          const num = isNumeric(cell);
+          return `<td class="${num ? 'num-cell' : ''}">${escHtml(String(fmtNum(cell)))}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${heads}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function buildSteps(data) {
+      const p = (data.steps && data.steps.parsed) || {};
+      const l = (data.steps && data.steps.linked) || {};
+      const rc = data.rows ? data.rows.length : 0;
+      const tag = v => v ? `<span class="step-tag">${escHtml(String(v))}</span>` : '<span style="color:var(--faint)">—</span>';
+      return `<div class="steps-grid">
+    <div class="step-item"><div class="step-num">1</div><div class="step-content">
+      <div class="step-title">Text Parsing</div>
+      <div class="step-detail">Entity: ${tag(p.entity)} &nbsp; Aggregation: ${tag(p.aggregation)} &nbsp; Group by: ${tag(p.group_by)}
+      ${p.limit ? '&nbsp; Limit: ' + tag(p.limit) : ''}${p.time_dimension ? '<br/>Time: ' + tag(p.time_dimension) : ''}${p.filters ? '<br/>Filters: ' + tag(p.filters) : ''}</div>
+    </div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-content">
+      <div class="step-title">Schema Linking</div>
+      <div class="step-detail">Base: ${tag(l.base_table)} &nbsp; Metric: ${tag(l.metric_table)} &nbsp; Column: ${tag(l.metric_column)}<br/>Joins: ${tag(l.joins)}</div>
+    </div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-content">
+      <div class="step-title">Validation</div>
+      <div class="step-detail">${tag((data.steps && data.steps.validation) || 'Valid')}</div>
+    </div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-content">
+      <div class="step-title">Execution</div>
+      <div class="step-detail">${tag(rc + ' row' + (rc !== 1 ? 's' : '') + ' returned')}</div>
+    </div></div>
+  </div>`;
+    }
+
+    function addResult(data) {
+      const id = ++msgCount;
+      const div = document.createElement('div'); div.className = 'msg msg-bot';
+
+      if (data.invalid) {
+        div.innerHTML = `<div class="invalid-card">
+      <div class="invalid-icon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#6B9480" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg></div>
+      <div><div class="invalid-title">Not a valid database query</div>
+        <div class="invalid-text">${escHtml(data.error)}</div>
+
+      </div></div>`;
+        chat.appendChild(div); scrollBottom(); return;
+      }
+      if (data.error) {
+        div.innerHTML = `<div class="error-card"><div class="error-text"><strong>Could not process query</strong>${escHtml(data.error)}</div></div>`;
+        chat.appendChild(div); scrollBottom(); return;
+      }
+
+      const rc = data.rows ? data.rows.length : 0;
+      const chartLabel = data.chart_type ? CHART_TYPE_LABELS[data.chart_type] || data.chart_type : null;
+      const tableHTML = buildTable(data.columns, data.rows);
+      const stepsHTML = buildSteps(data);
+
+      const chartTabHTML = data.chart
+        ? `<div class="chart-wrap"><img id="chart-img-${id}" src="data:image/png;base64,${data.chart}" alt="Chart"/></div>
+       <div class="chart-actions"><button class="action-btn" onclick="downloadChart(${id})">
+         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Download PNG</button></div>`
+        : `<div class="no-chart">Chart available for 2-column numeric results.<br/>Try "Revenue by category" or "Sales by year".</div>`;
+
+      resultStore[id] = { question: data.question || '', columns: data.columns || [], rows: data.rows || [] };
+
+      div.innerHTML = `<div class="result-card" id="card-${id}">
+    <div class="result-header">
+      <span class="result-label">Query Result</span>
+      <span class="result-badge">${rc} row${rc !== 1 ? 's' : ''}</span>
+      ${chartLabel ? `<span class="chart-type-badge">${escHtml(chartLabel)}</span>` : ''}
+      <div class="header-actions">
+        <button class="action-btn" onclick="downloadCSV(${id})">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>CSV
+        </button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="results" onclick="switchTab(${id},'results')">Results</button>
+      <button class="tab-btn" data-tab="sql" onclick="switchTab(${id},'sql')">SQL</button>
+      <button class="tab-btn" data-tab="chart" onclick="switchTab(${id},'chart')">Chart</button>
+      <button class="tab-btn" data-tab="steps" onclick="switchTab(${id},'steps')">Steps</button>
+    </div>
+    <div class="tab-panel active" data-tab="results"><div class="table-wrap">${tableHTML}</div></div>
+    <div class="tab-panel" data-tab="sql">
+      <div class="sql-block" id="sqltext-${id}">${highlightSQL(data.sql || '')}</div>
+      <div class="sql-actions"><button class="copy-btn" id="cbtn-${id}" onclick="copySQL(${id})">Copy SQL</button></div>
+    </div>
+    <div class="tab-panel" data-tab="chart">${chartTabHTML}</div>
+    <div class="tab-panel" data-tab="steps">${stepsHTML}</div>
+  </div>`;
+
+      chat.appendChild(div); scrollBottom(); updateHistory();
+    }
+
+    // ── SUBMIT ────────────────────────────────────
+    async function submitQuery() {
+      const question = input.value.trim();
+      if (!question || isLoading) return;
+      isLoading = true; sendBtn.disabled = true;
+      closeAC(); ctxBar.classList.remove('visible');
+      input.value = ''; input.style.height = 'auto';
+      addUserMsg(question, false, '');
+      addThinking();
+      const wasForceFollowup = forceFollowup;
+      // Reset toggle after sending — one shot per query
+      if (forceFollowup) { dismissFollowup(); }
+      try {
+        const res = await fetch('/api/query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question, force_followup: wasForceFollowup }) });
+        const data = await res.json();
+        removeThinking();
+        // If follow-up, find and update the user message bubble we already rendered
+        if (data.is_followup && data.resolved_question) {
+          const userMsgs = chat.querySelectorAll('.msg-user-wrap');
+          const lastWrap = userMsgs[userMsgs.length - 1];
+          if (lastWrap && !lastWrap.querySelector('.followup-badge')) {
+            const hint = document.createElement('div');
+            hint.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px';
+            // hint.innerHTML = `<span class="resolved-hint">interpreted as: ${escHtml(data.resolved_question)}</span><span class="followup-badge">Follow-up</span>`;
+            lastWrap.insertBefore(hint, lastWrap.firstChild);
+          }
+        }
+        addResult(data);
+        if (!data.error && !data.invalid) { lastQuestion = question; showFollowupToggle(); }
+        addAiBadge(msgCount, data.used_groq);
+      } catch (err) {
+        removeThinking();
+        const div = document.createElement('div'); div.className = 'msg msg-bot';
+        div.innerHTML = `<div class="error-card"><div class="error-text"><strong>Connection error</strong>${escHtml(err.message)} — Check your terminal for details.</div></div>`;
+        chat.appendChild(div); scrollBottom();
+        console.error('Query error:', err);
+      }
+      isLoading = false; sendBtn.disabled = false; input.focus();
+    }
+
+    async function updateHistory() {
+      try {
+        const res = await fetch('/api/memory');
+        const data = await res.json();
+        const list = document.getElementById('history-list');
+        if (!data.memory || data.memory.length === 0) { list.innerHTML = '<div class="history-empty">No queries yet</div>'; return; }
+        list.innerHTML = [...data.memory].reverse().map(m => `
+      <div class="history-item" title="${escHtml(m.question)}" onclick="ask('${escHtml(m.question.replace(/'/g, "\\'"))}')">
+        ${escHtml(m.question.length > 42 ? m.question.substring(0, 42) + '...' : m.question)}
+      </div>`).join('');
+      } catch (e) { }
+    }
+
+    async function clearHistory() {
+      await fetch('/api/memory', { method: 'DELETE' });
+      document.getElementById('history-list').innerHTML = '<div class="history-empty">No queries yet</div>';
+      lastQuestion = '';
+      forceFollowup = false;
+      ctxBar.classList.remove('visible');
+      // document.getElementById('followup-toggle').classList.remove('visible', 'active');
+      // document.getElementById('followup-label').textContent = 'Follow-up mode';
+    }
+
+    // ── CHAT RESET ────────────────────────────────
+    // Shared reset called whenever the active database changes.
+    // Mirrors the reset logic in activateUpload() so both paths stay in sync.
+    async function resetChat(welcomeTitle, welcomeBody) {
+      // 1. Clear server-side memory
+      await fetch('/api/memory', { method: 'DELETE' });
+
+      // 2. Clear in-memory result store and message counter
+      for (const key in resultStore) delete resultStore[key];
+      msgCount = 0;
+
+      // 3. Reset follow-up / context-bar state
+      lastQuestion = '';
+      forceFollowup = false;
+      ctxBar.classList.remove('visible');
+      const ftBtn = document.getElementById('followup-toggle');
+      if (ftBtn) ftBtn.classList.remove('visible', 'active');
+      const ftLbl = document.getElementById('followup-label');
+      if (ftLbl) ftLbl.textContent = 'Follow-up mode';
+
+      // 4. Clear sidebar history list
+      document.getElementById('history-list').innerHTML = '<div class="history-empty">No queries yet</div>';
+
+      // 5. Rebuild welcome screen in chat
+      chat.innerHTML = '';
+      const welcome = document.createElement('div');
+      welcome.className = 'welcome';
+      welcome.id = 'welcome-msg';
+      welcome.innerHTML = `
+        <div class="welcome-icon">
+          <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="#769382" stroke-width="1.6">
+            <ellipse cx="12" cy="8" rx="8" ry="3" />
+            <path d="M4 8v5c0 1.66 3.58 3 8 3s8-1.34 8-3V8" />
+            <path d="M4 13v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5" />
+          </svg>
+        </div>
+        <h2>${welcomeTitle}</h2>
+        <p>${welcomeBody}</p>`;
+      chat.appendChild(welcome);
+    }
+
+    function openSchema() {
+      document.getElementById('schema-modal').classList.add('open');
+      const content = document.getElementById('schema-content');
+      content.innerHTML = '<div style="color:var(--faint);font-size:13px">Loading schema...</div>';
+      fetch('/api/schema').then(r => r.json()).then(data => {
+        if (data.error) { content.innerHTML = `<div style="color:var(--red);font-size:13px">${escHtml(data.error)}</div>`; return }
+        const sourceTag = data.source === 'local'
+          ? `<div style="font-size:11px;color:var(--faint);margin-bottom:14px;font-family:var(--mono)">Source: <span style="color:var(--sage)">local · ${escHtml(data.source_name || 'upload')}</span></div>`
+          : `<div style="font-size:11px;color:var(--faint);margin-bottom:14px;font-family:var(--mono)">Source: <span style="color:var(--sage)">PostgreSQL</span></div>`;
+        const counts = data.row_counts || {};
+        const html = sourceTag + Object.entries(data.schema).map(([table, cols]) => {
+          const rc = counts[table];
+          const rcStr = (rc === undefined || rc === null) ? '' :
+            `<span style="font-size:10.5px;color:var(--muted);font-family:var(--mono);background:var(--surface2);padding:2px 8px;border-radius:4px;border:1px solid var(--border)">${Number(rc).toLocaleString()} row${rc === 1 ? '' : 's'}</span>`;
+          return `
+      <div style="margin-bottom:20px">
+        <div style="font-weight:700;color:var(--text);font-size:12.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+          <span style="background:var(--sage-dim);color:var(--sage);border:1px solid var(--sage-border);padding:2px 10px;border-radius:5px;font-size:10.5px;font-weight:700">${escHtml(table)}</span>
+          <span style="font-size:11px;color:var(--faint);font-weight:500">${cols.length} column${cols.length === 1 ? '' : 's'}</span>
+          ${rcStr}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;padding-left:4px">
+          ${cols.map(c => `<span style="font-family:var(--mono);font-size:10.5px;background:var(--surface2);padding:2px 8px;border-radius:4px;color:var(--muted);border:1px solid var(--border)">${escHtml(c)}</span>`).join('')}
+        </div>
+      </div>`;
+        }).join('');
+        content.innerHTML = html;
+      }).catch(() => { content.innerHTML = '<div style="color:var(--red);font-size:13px">Could not load schema.</div>' });
+    }
+    function closeSchema() { document.getElementById('schema-modal').classList.remove('open') }
+    document.getElementById('schema-modal').addEventListener('click', function (e) { if (e.target === this) closeSchema() });
+
+    input.focus();
+
+    // ── DATABASE CONNECTION ───────────────────────
+    async function connectDB() {
+      const btn = document.getElementById('conn-btn');
+      const errDiv = document.getElementById('conn-error');
+      const staDiv = document.getElementById('conn-status');
+      const host = document.getElementById('conn-host').value.trim() || '127.0.0.1';
+      const port = document.getElementById('conn-port').value.trim() || '5432';
+      const dbname = document.getElementById('conn-dbname').value.trim();
+      const user = document.getElementById('conn-user').value.trim();
+      const pass_ = document.getElementById('conn-password').value;
+
+      if (!dbname || !user) { showConnError('Database name and username are required.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Connecting…';
+      errDiv.classList.remove('visible');
+      staDiv.classList.remove('visible');
+      staDiv.textContent = 'Testing connection…';
+      staDiv.classList.add('visible');
+
+      try {
+        const res = await fetch('/api/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ host, port, dbname, user, password: pass_ })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          staDiv.textContent = `Connected! Found ${data.tables} table(s).`;
+          document.getElementById('db-name-label').textContent = `${dbname} @ ${host}`;
+          document.getElementById('db-badge-label').textContent = `${dbname} @ ${host}:${port}`;
+          // Reset chat for the newly connected database
+          await resetChat(
+            'Ask your database anything',
+            'Type a question in plain English. QueryNative converts it to SQL, runs it, and visualizes the results. Ask follow-up questions to refine results.'
+          );
+          // Refresh suggestions for new DB
+          loadSuggestions();
+          // Update schema modal
+          updateSchemaModal(data.schema);
+          setTimeout(() => { document.getElementById('conn-overlay').classList.add('hidden'); }, 800);
+        } else {
+          showConnError(data.error || 'Connection failed.');
+        }
+      } catch (e) {
+        showConnError('Network error: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Connect';
+      }
+    }
+
+    function showConnError(msg) {
+      const e = document.getElementById('conn-error');
+      const s = document.getElementById('conn-status');
+      e.textContent = msg;
+      e.classList.add('visible');
+      s.classList.remove('visible');
+    }
+
+    function showConnectScreen() {
+      document.getElementById('conn-overlay').classList.remove('hidden');
+    }
+
+    function updateSchemaModal(schema) {
+      // Update the schema display if the modal exists
+      const schemaContent = document.getElementById('schema-content');
+      if (!schemaContent || !schema) return;
+      let html = '';
+      for (const [table, cols] of Object.entries(schema)) {
+        html += `<div style="margin-bottom:14px">
+      <div style="color:var(--sage);font-weight:700;margin-bottom:4px">${table}</div>
+      <div style="color:var(--muted);font-size:12px;line-height:1.7">${cols.join(', ')}</div>
+    </div>`;
+      }
+      schemaContent.innerHTML = html;
+    }
+
+    // Add AI badge to result cards when Groq was used
+    function addAiBadge(msgId, usedGroq) {
+      if (!usedGroq) return;
+      const card = document.querySelector(`[data-msg="${msgId}"] .result-tabs`);
+      if (card && !card.querySelector('.ai-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'ai-badge';
+        badge.innerHTML = `<svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Parsed`;
+        card.appendChild(badge);
+      }
+    }
+
+    // Check connection on page load — if already connected don't show overlay
+    async function checkInitialConnection() {
+      try {
+        const res = await fetch('/api/connection');
+        const data = await res.json();
+        if (data.connected) {
+          document.getElementById('conn-overlay').classList.add('hidden');
+          let label;
+          if (data.source === 'local') {
+            label = `Local · ${data.config.dbname || 'file'}`;
+          } else {
+            label = `${data.config.dbname} @ ${data.config.host}`;
+          }
+          document.getElementById('db-name-label').textContent = label;
+          document.getElementById('db-badge-label').textContent =
+            data.source === 'local' ? label
+              : `${data.config.dbname} @ ${data.config.host}:${data.config.port}`;
+          if (data.schema) updateSchemaModal(data.schema);
+          loadSuggestions();
+        }
+      } catch (e) { /* stay on connect screen */ }
+    }
+
+    // Allow Enter key in connect form
+    document.addEventListener('keydown', e => {
+      const overlay = document.getElementById('conn-overlay');
+      if (!overlay.classList.contains('hidden') && e.key === 'Enter') {
+        connectDB();
+      }
+    });
+
+    // ── DUAL-ENGINE: SOURCE TOGGLE + UPLOAD FLOW ─────────────
+    let uploadKind = 'csv';                  // current sub-tab: csv | sql | sqlite
+    let pendingUpload = null;                // last successful /api/upload payload
+    const ACCEPT_BY_KIND = {
+      csv: '.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      sql: '.sql,text/plain',
+      sqlite: '.sqlite,.db,application/x-sqlite3',
+    };
+    const LABEL_BY_KIND = {
+      csv: {
+        section: 'CSV or Excel File', drop: 'Drop CSV / Excel here', meta: 'or click to browse  ·  .csv  .xlsx  .xls',
+        info: 'Headers and types are inferred automatically; primary keys are detected by name + uniqueness.'
+      },
+      // sql: {
+      //   section: 'SQL Dump File', drop: 'Drop .sql file here', meta: 'or click to browse  ·  .sql',
+      //   info: 'CREATE TABLE / INSERT statements are executed locally. Foreign key declarations are preserved.'
+      // },
+      sqlite: {
+        section: 'SQLite Database File', drop: 'Drop .sqlite file here', meta: 'or click to browse  ·  .sqlite  .db',
+        info: 'All tables and data are migrated. Foreign keys are preserved where possible.'
+      },
+    };
+
+    function setSourceMode(mode) {
+      const isUp = mode === 'upload';
+      document.getElementById('src-db').classList.toggle('active', !isUp);
+      document.getElementById('src-up').classList.toggle('active', isUp);
+      document.getElementById('pg-panel').style.display = isUp ? 'none' : '';
+      document.getElementById('upload-panel').style.display = isUp ? '' : 'none';
+      document.getElementById('conn-sub-text').textContent = isUp
+        ? 'Upload a file to create a queryable schema'
+        : 'Connect your PostgreSQL database';
+    }
+
+    function setUploadKind(kind) {
+      uploadKind = kind;
+      document.querySelectorAll('.upload-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.kind === kind);
+      });
+      const lbl = LABEL_BY_KIND[kind];
+      document.getElementById('upload-label').textContent = lbl.section;
+      document.getElementById('dz-name').textContent = lbl.drop;
+      document.getElementById('dz-meta').textContent = lbl.meta;
+      document.getElementById('upload-info-text').textContent = lbl.info;
+      const inp = document.getElementById('upload-input');
+      inp.value = '';
+      inp.accept = ACCEPT_BY_KIND[kind] || '';
+      // Hide previous-upload UI when switching kinds
+      hideUploadResult();
+    }
+
+    function hideUploadResult() {
+      document.getElementById('upload-status').classList.remove('visible', 'error');
+      document.getElementById('upload-status').textContent = '';
+      document.getElementById('tables-card').classList.remove('visible');
+      document.getElementById('tables-card-body').innerHTML = '';
+      document.getElementById('activate-btn').classList.remove('visible');
+      document.getElementById('reset-btn').classList.remove('visible');
+      document.getElementById('dz-hint').style.display = 'none';
+      pendingUpload = null;
+    }
+
+    function fmtBytes(n) {
+      if (n == null) return '';
+      if (n < 1024) return n + ' B';
+      if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+      return (n / 1048576).toFixed(1) + ' MB';
+    }
+
+    async function handleFileChosen(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      // Show selected file in dropzone
+      document.getElementById('dz-name').textContent = file.name;
+      document.getElementById('dz-meta').textContent = fmtBytes(file.size) + '  —  click to change';
+      // Upload
+      uploadFile(file);
+    }
+
+    async function uploadFile(file) {
+      const status = document.getElementById('upload-status');
+      status.classList.remove('error');
+      status.classList.add('visible');
+      status.innerHTML = '<span class="upload-spinner"></span> Ingesting <strong>' + escHtml(file.name) + '</strong>…';
+      document.getElementById('tables-card').classList.remove('visible');
+      document.getElementById('activate-btn').classList.remove('visible');
+      document.getElementById('reset-btn').classList.remove('visible');
+
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('kind', uploadKind);
+
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!data.success) {
+          status.classList.add('error');
+          status.textContent = data.error || 'Upload failed.';
+          return;
+        }
+        pendingUpload = data;
+        status.classList.remove('error');
+        status.textContent = data.message || 'Schema created.';
+        renderTablesCreated(data.tables || []);
+        document.getElementById('activate-btn').classList.add('visible');
+        document.getElementById('reset-btn').classList.add('visible');
+      } catch (e) {
+        status.classList.add('error');
+        status.textContent = 'Upload error: ' + e.message;
+      }
+    }
+
+    function renderTablesCreated(tables) {
+      const body = document.getElementById('tables-card-body');
+      if (!tables.length) {
+        body.innerHTML = '<div style="color:var(--faint);font-size:12px;padding:8px 0">No tables detected.</div>';
+      } else {
+        body.innerHTML = tables.map(t =>
+          `<div class="tables-card-row">
+             <span class="tables-card-name">${escHtml(t.name)}</span>
+             <span class="tables-card-count">${Number(t.row_count || 0).toLocaleString()} row${t.row_count === 1 ? '' : 's'}</span>
+           </div>`
+        ).join('');
+      }
+      document.getElementById('tables-card').classList.add('visible');
+    }
+
+    async function activateUpload() {
+      if (!pendingUpload) return;
+      const btn = document.getElementById('activate-btn');
+      btn.disabled = true;
+      btn.textContent = 'Activating…';
+      try {
+        const res = await fetch('/api/upload/activate', { method: 'POST' });
+        const data = await res.json();
+        if (!data.success) {
+          const status = document.getElementById('upload-status');
+          status.classList.add('visible', 'error');
+          status.textContent = data.error || 'Activation failed.';
+          return;
+        }
+        // Reset chat for new data source
+        await resetChat(
+          'Ask your uploaded data anything',
+          'Type a question in plain English. QueryNative converts it to SQL, runs it locally on your file, and visualizes the results.'
+        );
+
+        // Update header indicators
+        const label = `Local · ${pendingUpload.source_name || 'file'}`;
+        document.getElementById('db-name-label').textContent = label;
+        document.getElementById('db-badge-label').textContent = label;
+        loadSuggestions();
+
+        // Hide overlay
+        document.getElementById('conn-overlay').classList.add('hidden');
+      } catch (e) {
+        const status = document.getElementById('upload-status');
+        status.classList.add('visible', 'error');
+        status.textContent = 'Activation error: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '✓ Use This Schema';
+      }
+    }
+
+    async function resetUpload() {
+      try { await fetch('/api/upload/reset', { method: 'POST' }); } catch (e) { }
+      hideUploadResult();
+      document.getElementById('upload-input').value = '';
+      const lbl = LABEL_BY_KIND[uploadKind];
+      document.getElementById('dz-name').textContent = lbl.drop;
+      document.getElementById('dz-meta').textContent = lbl.meta;
+    }
+
+    // Drag & drop on dropzone
+    (function bindDragDrop() {
+      const dz = document.getElementById('dropzone');
+      if (!dz) return;
+      ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => {
+        e.preventDefault(); e.stopPropagation(); dz.classList.add('drag');
+      }));
+      ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => {
+        e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag');
+      }));
+      dz.addEventListener('drop', e => {
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!f) return;
+        // auto-pick the right tab from the extension
+        const ext = (f.name.split('.').pop() || '').toLowerCase();
+        if (ext === 'sql') setUploadKind('sql');
+        else if (ext === 'sqlite' || ext === 'db') setUploadKind('sqlite');
+        else if (ext === 'csv' || ext === 'xlsx' || ext === 'xls') setUploadKind('csv');
+        document.getElementById('dz-name').textContent = f.name;
+        document.getElementById('dz-meta').textContent = fmtBytes(f.size) + '  —  click to change';
+        uploadFile(f);
+      });
+    })();
+
+    // initialise the file input accept list
+    setUploadKind('csv');
+
+    checkInitialConnection();
+  </script>
+</body>
+
+</html>
