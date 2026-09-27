@@ -16,7 +16,6 @@ The system processes a natural-language request, interprets the query intent, ma
 - **Schema Linking** — Maps user terminology to database tables and columns.
 - **SQL Generation** — Converts interpreted requests into SQL queries.
 - **SQL Validation** — Restricts database interaction to safe, read-only queries.
-- **Conversational Queries** — Supports follow-up queries using query context.
 - **Database & File Ingestion** — Supports PostgreSQL and local database/data-file workflows implemented in the project.
 - **Result Visualization** — Presents query results in tabular form and through charts.
 - **Processing Transparency** — Provides visibility into stages such as text parsing, schema linking, validation, and execution.
